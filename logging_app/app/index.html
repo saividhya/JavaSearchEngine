@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <script src="/bower_components/jquery/dist/jquery.js"></script>
+ <script src="/bower_components/modernizr/modernizr.js"></script>
+ <script src="/bower_components/bootstrap-sass/assets/javascripts/bootstrap/affix.js"></script>
+<script src="/bower_components/bootstrap-sass/assets/javascripts/bootstrap/alert.js"></script>
+<script src="/bower_components/bootstrap-sass/assets/javascripts/bootstrap/dropdown.js"></script>
+<script src="/bower_components/bootstrap-sass/assets/javascripts/bootstrap/tooltip.js"></script>
+<script src="/bower_components/bootstrap-sass/assets/javascripts/bootstrap/modal.js"></script>
+<script src="/bower_components/bootstrap-sass/assets/javascripts/bootstrap/transition.js"></script>
+<script src="/bower_components/bootstrap-sass/assets/javascripts/bootstrap/button.js"></script>
+<script src="/bower_components/bootstrap-sass/assets/javascripts/bootstrap/popover.js"></script>
+<script src="/bower_components/bootstrap-sass/assets/javascripts/bootstrap/carousel.js"></script>
+<script src="/bower_components/bootstrap-sass/assets/javascripts/bootstrap/scrollspy.js"></script>
+<script src="/bower_components/bootstrap-sass/assets/javascripts/bootstrap/collapse.js"></script>
+<script src="/bower_components/bootstrap-sass/assets/javascripts/bootstrap/tab.js"></script>
+<script href="/bower_components/bootstrap-sass/assets/javascripts/bootstrap.js"></script>
+ <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+ <script src="scripts/index.js"></script>
+    
+<link rel="stylesheet" href="styles/index.css">
+    
+</head>
+<body>
+<div class="container">
+  <div class="tabbable">
+    <ul class="nav nav-tabs">
+      <li class="active"><a href="#tab2" data-toggle="tab">Results</a></li>
+      <li><a href="#tab1" data-toggle="tab">Search</a></li>
+      <li><a href="#tab3" data-toggle="tab">Reasons</a></li>
+    </ul>
+    <div class="tab-content">
+      <div class="tab-pane" id="tab1">
+        <div id="custom-search-input">
+            <div class="input-group col-md-12">
+                <input type="text" id="searchtext" class="form-control input-lg" placeholder="Search" />
+                <span class="input-group-btn">
+                    <button class="tablinks" id="search" type="button" data-id="search">
+                        <i class="glyphicon glyphicon-search"></i>
+                    </button>
+                </span>
+            </div>
+        </div>
+        <div>
+        	  <div id="searchsuggestions"></div>
+        </div>
+      </div>
+       <div class="tab-pane" id="tab3">
+        <h5><b>Crawling</b></h5>
+        <p>
+          Both the URLs - <b> Java programming Wikibook </b> and <b> Oracle TM Tutorial </b> have been crawled using BeautifulSoup. In each page, each section is identified as content between two h2 tags and these sections are stored separately. For each section following details are stored. <br/>
+          1. <b> URL </b> - The URL of the page which is crawled <br/>
+          2. <b> Main heading </b> - The main title of the page<br/>
+          3. <b> Sub heading </b>- The title of the sub section retrieved <br/>
+          4. <b> Content </b>- The content of the sub section <br/>
+          5. <b> Keywords </b>- I'm maintaining a separate file containing java and OOPS concept keywords. While crawling if the content contains any of the keywords present in this file, the list of keywords are inserted here <br/> <br/>
+        </p>
+
+        <h5><b>Indexing</b></h5>
+        <p>
+          For indexing and querying <b>SOLR</b> is used. Custom indexing is used by changing the schema.xml file. <b> StandardTokenizerFactory, StandardFilterFactory, LowerCaseFilterFactory and PorterStemFilterFactory </b> are defined for the field type. This helps to make the search case insensitive and also <b>Stemming</b> is performed on the content using PorterStem to get better results. URL, Main heading, Sub heading, Content and Keywords are stored as separate field for each section crawled in previous step. Each section is inserted as a document in SOLR. To use this custom schema.xml another configuration file solrconfig.xml is changed where instead of ManagedIndexSchemaFactory, ClassicIndexSchemaFactory is used to recognise user-defined schema.xml <br/><br/>
+        </p>
+        <h5><b>Querying</b></h5>
+        <p>
+          Before querying, we remove stop words from the query to give better search results. The same set of Java keywords is searched in query too. All the keywords in the query are taken separately. In SOLR, <b> edistmax </b> is used as query parser and <b> qf parameter </b> is set with value <b> keywords^5 heading^2 subheading^2 content^2 </b>. By boosting the importance of keywords field, we get relevant results for the query. The keywords list is searched against keywords, heading and subheading field. A weightage of 5 is given for keyword field, 2 for heading, subheading and content fields. The actual query is searched against content field. The <b> q parameter </b> for SOLR will be <b>heading:<i>keywords</i>&subheading:<i>keywords</i>&keywords:<i>keywords</i>&content:<i>query</i>
+          </b><br/><br/> 
+          SOLR has predefined similarity measures available among which I have configured <b> BM25 Similarity </b> with parameters <b> k1=1.3 and b = 0.75 </b>. BM25 algorithm is similar to TF/IDF similarity but it originates from probablistic relevance model. BM25 uses Term-frequency saturation (k1) and field-length normalization (b) parameters. k1 is used to define a limit for term frequency after which the contribution of tf on the score will be less in BM25 algorithm compared to tf/IDF algorithm. The second parameter b, which considers document with bigger length may have wider scope with high frequency terms and b is used to set a limit at what degree document length normalizes high frequency terms.
+          <br/><br/>
+          As an additional feature a search field is also enabled where the user can search for content and relevant recommendations will be populated <br/><br/>
+          The following fields are shown as query result :
+          <br/>
+          1. <b> URL </b> - The URL of the page in which the section was retrieved <br/>
+          2. <b> Title </b> - The title of the section<br/>
+          3. <b> Score </b>- The score for the particular section <br/>
+          4. <b> Content </b>- The content of the sub section <br/>
+          
+        </p>
+      </div>
+      <div class="tab-pane active" id="tab2">
+      <p>Click on the post to see suggestions </p>
+        <div class="tab">
+                <button class="tablinks" data-id="1" id="defaultOpen">Post 1</button>
+                <button class="tablinks" data-id="2" >Post 2</button>
+                <button class="tablinks" data-id="3" >Post 3</button>
+                <button class="tablinks" data-id="4" >Post 4</button>
+                <button class="tablinks" data-id="5" >Post 5</button>
+                <button class="tablinks" data-id="6" >Post 6</button>
+                <button class="tablinks" data-id="7" >Post 7</button>
+                <button class="tablinks" data-id="8" >Post 8</button>
+                <button class="tablinks" data-id="9" >Post 9</button>
+                <button class="tablinks" data-id="10" >Post 10</button>
+              </div>
+
+              <div id="Question1" class="tabcontent">
+                <h4><b>Post 1</b></h4>
+                <p>I was presented with this question in an end of module open book exam today and found myself lost. i was reading Head first Javaand both definitions seemed to be exactly the same. i was just wondering what the MAIN difference was for my own piece of mind. i know there are a number of similar questions to this but, none i have seen which provide a definitive answer.Thanks, Darren</p>
+                <h4><b>Suggestions</b></h4>
+                <div id="suggestion1"></div>
+              </div>
+
+              <div id="Question2" class="tabcontent">
+                <h4><b>Post 2</b></h4>
+                <p>Inheritance is when a 'class' derives from an existing 'class'.So if you have a Person class, then you have a Student class that extends Person, Student inherits all the things that Person has.There are some details around the access modifiers you put on the fields/methods in Person, but that's the basic idea.For example, if you have a private field on Person, Student won't see it because its private, and private fields are not visible to subclasses.Polymorphism deals with how the program decides which methods it should use, depending on what type of thing it has.If you have a Person, which has a read method, and you have a Student which extends Person, which has its own implementation of read, which method gets called is determined for you by the runtime, depending if you have a Person or a Student.It gets a bit tricky, but if you do something likePerson p = new Student();p.read();the read method on Student gets called.Thats the polymorphism in action.You can do that assignment because a Student is a Person, but the runtime is smart enough to know that the actual type of p is Student.Note that details differ among languages.You can do inheritance in javascript for example, but its completely different than the way it works in Java.</p> 
+                <h4><b>Suggestions</b></h4>
+                <div id="suggestion2"></div>
+              </div>
+
+              <div id="Question3" class="tabcontent">
+                <h4><b>Post 3</b></h4>
+                <p>Polymorphism: The ability to treat objects of different types in a similar manner.Example: Giraffe and Crocodile are both Animals, and animals can Move.If you have an instance of an Animal then you can call Move without knowing or caring what type of animal it is.Inheritance: This is one way of achieving both Polymorphism and code reuse at the same time.Other forms of polymorphism:There are other way of achieving polymorphism, such as interfaces, which provide only polymorphism but no code reuse (sometimes the code is quite different, such as Move for a Snake would be quite different from Move for a Dog, in which case an Interface would be the better polymorphic choice in this case.In other dynamic languages polymorphism can be achieved with Duck Typing, which is the classes don't even need to share the same base class or interface, they just need a method with the same name.Or even more dynamic like Javascript, you don't even need classes at all, just an object with the same method name can be used polymorphically.</p>
+                <h4><b>Suggestions</b></h4>
+                <div id="suggestion3"></div>
+              </div>
+
+              <div id="Question4" class="tabcontent">
+                <h4><b>Post 4</b></h4>
+                <p>I found out that the above piece of code is perfectly legal in Java. I have the following questions. ThanksAdded one more question regarding Abstract method classes.</p>
+                <pre>
+                  public class TestClass {
+                    public static void main(String[] args) {
+                        TestClass t = new TestClass();
+                    }
+                    private static void testMethod() {
+                        abstract class TestMethod {
+                            int a;
+                            int b;
+                            int c;
+                            abstract void implementMe();
+                        }
+                        class DummyClass extends TestMethod {
+                            void implementMe() {}
+                        }
+                        DummyClass dummy = new DummyClass();
+                    }
+                }
+                </pre>
+                <h4><b>Suggestions</b></h4>
+                <div id="suggestion4"></div>
+              </div>
+              <div id="Question5" class="tabcontent">
+                <h4><b>Post 5</b></h4>
+                <p>In java it's a bit difficult to implement a deep object copy function. What steps you take to ensure the original object and the cloned one share no reference? </p>
+                <h4><b>Suggestions</b></h4>
+                <div id="suggestion5"></div>
+              </div>
+              <div id="Question6" class="tabcontent">
+                <h4><b>Post 6</b></h4>
+                <p>You can make a deep copy serialization without creating some files. Copy: Restore:</p>
+                <pre>
+                  ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                  ObjectOutputStream oos = new ObjectOutputStream(bos);
+                  oos.writeObject(object);
+                  oos.flush();
+                  oos.close();
+                  bos.close();
+                  byte[] byteData = bos.toByteArray();;
+                  ByteArrayInputStream bais = new ByteArrayInputStream(byteData);
+                  (Object) object = (Object) new ObjectInputStream(bais).readObject();
+                </pre>
+                <h4><b>Suggestions</b></h4>
+                <div id="suggestion6"></div>
+              </div>
+              <div id="Question7" class="tabcontent">
+                <h4><b>Post 7</b></h4>
+                <p>Java has the ability to create classes at runtime. These classes are known as Synthetic Classes or Dynamic Proxies. See for more information. Other open-source libraries, such as and also allow you to generate synthetic classes, and are more powerful than the libraries provided with the JRE. Synthetic classes are used by AOP (Aspect Oriented Programming) libraries such as Spring AOP and AspectJ, as well as ORM libraries such as Hibernate. </p>
+                <h4><b>Suggestions</b></h4>
+                <div id="suggestion7"></div>
+              </div>
+              <div id="Question8" class="tabcontent">
+                <h4><b>Post 8</b></h4>
+                <p>A safe way is to serialize the object, then deserialize.This ensures everything is a brand new reference.about how to do this efficiently. Caveats: It's possible for classes to override serialization such that new instances are created, e.g. for singletons.Also this of course doesn't work if your classes aren't Serializable.</p>
+                <h4><b>Suggestions</b></h4>
+                <div id="suggestion8"></div>
+              </div>
+              <div id="Question9" class="tabcontent">
+                <h4><b>Post 9</b></h4>
+                <p> comment this code       </p>
+                <pre> 
+                  /*if (savedinstancestate == null) {
+                      getsupportfragmentmanager().begintransaction().add(r.id.container new placeholderfragment()).commit();
+                  }*/
+                </pre>
+                <h4><b>Suggestions</b></h4>
+                <div id="suggestion9"></div>
+              </div>
+              <div id="Question10" class="tabcontent">
+                <h4><b>Post 10</b></h4>
+                <p>     in a class i can have as many constructors as i want with different argument types. i made all the constructors as private it didn't give any error because my implicit default constructor was public but when i declared my implicit default constructor as private then its showing an error while extending the class.  why?       this works fine         this can not be inherited       </p>
+                <pre> 
+                    public class demo4 {
+                        private string name;
+                        private int age;
+                        private double sal;
+                        private demo4(string name int age) {
+                            this.name = name;
+                            this.age = age;
+                        }
+                        demo4(string name) {
+                            this.name = name;
+                        }
+                        demo4() {
+                            this("unknown"
+                                20);
+                            this.sal = 2000;
+                        }
+                        void show() {
+                            system.out.println("name" + name);
+                            system.out.println("age: " + age);
+                        }
+                    }
+                    public class demo4 {
+                        private string name;
+                        private int age;
+                        private double sal;
+                        private demo4(string name int age) {
+                            this.name = name;
+                            this.age = age;
+                        }
+                        demo4(string name) {
+                            this.name = name;
+                        }
+                        private demo4() {
+                            this("unknown"
+                                20);
+                            this.sal = 2000;
+                        }
+                        void show() {
+                            system.out.println("name" + name);
+                            system.out.println("age: " + age);
+                        }
+                    }
+              </pre>
+                <h4><b>Suggestions</b></h4>
+                <div id="suggestion10"></div>
+              </div>
+                      </div>
+         
+    </div>
+  </div>
+</div>
+
+</body>
+</html> 
